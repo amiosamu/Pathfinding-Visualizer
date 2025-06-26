@@ -21,33 +21,64 @@ export const dfs = (
   startNode: GridNode,
   finishNode: GridNode
 ): AlgorithmResult => {
-  // TODO: Your implementation here!
-  // 
-  // Hints:
-  // 1. Use a stack to store nodes to visit (array with push/pop works)
-  // 2. Start by adding the start node to the stack
-  // 3. While stack is not empty:
-  //    - Pop the top node from stack
-  //    - If already visited, continue to next iteration
-  //    - Mark as visited and add to visitedNodesInOrder
-  //    - If it's the finish node, you're done!
-  //    - For each unvisited neighbor:
-  //      - Set its previousNode to current node
-  //      - Push to stack
-  // 4. Use getNodesInShortestPathOrder to reconstruct path
-  //
-  // Alternative: You could implement this recursively, but iterative
-  // gives you more control over the visualization order.
-  //
-  // Remember: DFS uses a STACK (LIFO), BFS uses a QUEUE (FIFO)
-  
   const visitedNodesInOrder: GridNode[] = [];
-  const nodesInShortestPathOrder: GridNode[] = [];
-  const isPathFound = false;
-
+  
+  // Initialize all nodes - reset visited status and previous node references
+  for (let row = 0; row < grid.length; row++) {
+    for (let col = 0; col < grid[row].length; col++) {
+      const node = grid[row][col];
+      node.isVisited = false;
+      node.previousNode = null;
+    }
+  }
+  
+  // Use a stack for DFS (LIFO - Last In, First Out)
+  const stack: GridNode[] = [startNode];
+  
+  while (stack.length > 0) {
+    // Pop the top node from the stack
+    const currentNode = stack.pop()!;
+    
+    // If already visited, continue to next iteration
+    if (currentNode.isVisited) {
+      continue;
+    }
+    
+    // If we encounter a wall, skip it
+    if (currentNode.isWall) {
+      continue;
+    }
+    
+    // Mark the current node as visited
+    currentNode.isVisited = true;
+    visitedNodesInOrder.push(currentNode);
+    
+    // If we reached the finish node, we're done!
+    if (currentNode === finishNode) {
+      const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
+      return {
+        visitedNodesInOrder,
+        nodesInShortestPathOrder,
+        isPathFound: true
+      };
+    }
+    
+    // Get unvisited neighbors and add them to the stack
+    const unvisitedNeighbors = getUnvisitedNeighbors(currentNode, grid);
+    for (const neighbor of unvisitedNeighbors) {
+      // Set the previous node for path reconstruction
+      if (!neighbor.previousNode) {
+        neighbor.previousNode = currentNode;
+      }
+      // Push neighbor to stack (will be processed in LIFO order)
+      stack.push(neighbor);
+    }
+  }
+  
+  // If we get here, no path was found
   return {
     visitedNodesInOrder,
-    nodesInShortestPathOrder,
-    isPathFound
+    nodesInShortestPathOrder: [],
+    isPathFound: false
   };
 }; 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Grid from './components/Grid';
 import { GridNode, Algorithm } from './types';
 import { 
@@ -27,6 +27,19 @@ const App: React.FC = () => {
   const [isDrawingWalls, setIsDrawingWalls] = useState(false);
   
   const mouseIsPressed = useRef(false);
+  const speedRef = useRef(speed);
+  const animationTimeouts = useRef<number[]>([]);
+
+  // Update speedRef when speed changes
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
+
+  // Clear all animation timeouts
+  const clearAnimationTimeouts = useCallback(() => {
+    animationTimeouts.current.forEach(timeout => clearTimeout(timeout));
+    animationTimeouts.current = [];
+  }, []);
 
   const handleMouseDown = useCallback((row: number, col: number) => {
     if (isRunning) return;
@@ -110,19 +123,25 @@ const App: React.FC = () => {
   }, [grid, placingMode, startNode, endNode]);
 
   const handleClearPath = useCallback(() => {
-    if (isRunning) return;
+    if (isRunning) {
+      clearAnimationTimeouts();
+      setIsRunning(false);
+    }
     setGrid(prev => clearPath(prev));
     setIsFinished(false);
-  }, [isRunning]);
+  }, [isRunning, clearAnimationTimeouts]);
 
   const handleReset = useCallback(() => {
-    if (isRunning) return;
+    if (isRunning) {
+      clearAnimationTimeouts();
+      setIsRunning(false);
+    }
     setGrid(resetGrid);
     setStartNode(null);
     setEndNode(null);
     setIsFinished(false);
     setPlacingMode('wall');
-  }, [isRunning]);
+  }, [isRunning, clearAnimationTimeouts]);
 
   const handleGenerateMaze = useCallback(() => {
     if (isRunning) return;
@@ -187,8 +206,8 @@ const App: React.FC = () => {
   ) => {
     console.log('Animating algorithm. Visited nodes:', visitedNodesInOrder.length, 'Path nodes:', shortestPath.length);
     
-    // Calculate delay based on speed (1-100 -> 200ms-10ms)
-    const baseDelay = Math.max(10, 210 - (speed * 2));
+    // Clear any existing timeouts
+    clearAnimationTimeouts();
     
     // If no nodes were visited, just finish
     if (visitedNodesInOrder.length === 0) {
@@ -197,32 +216,40 @@ const App: React.FC = () => {
       return;
     }
     
-    // Animate visited nodes
-    for (let i = 0; i < visitedNodesInOrder.length; i++) {
-      setTimeout(() => {
-        const node = visitedNodesInOrder[i];
-        console.log('Animating visited node:', node.row, node.col);
-        
-        if (!node.isStart && !node.isEnd) {
-          setGrid(prev => {
-            const newGrid = [...prev];
-            newGrid[node.row][node.col] = { ...newGrid[node.row][node.col], isVisited: true };
-            return newGrid;
-          });
-        }
-        
-        // If this is the last visited node, start animating the path
-        if (i === visitedNodesInOrder.length - 1) {
-          setTimeout(() => animatePath(shortestPath, pathFound), baseDelay);
-        }
-      }, baseDelay * i);
-    }
-  }, [speed]);
+    // Animate visited nodes with dynamic speed
+    let currentIndex = 0;
+    
+    const animateNextNode = () => {
+      if (currentIndex >= visitedNodesInOrder.length) {
+        // Start animating the path
+        animatePath(shortestPath, pathFound);
+        return;
+      }
+      
+      const node = visitedNodesInOrder[currentIndex];
+      console.log('Animating visited node:', node.row, node.col);
+      
+      if (!node.isStart && !node.isEnd) {
+        setGrid(prev => {
+          const newGrid = [...prev];
+          newGrid[node.row][node.col] = { ...newGrid[node.row][node.col], isVisited: true };
+          return newGrid;
+        });
+      }
+      
+      currentIndex++;
+      
+      // Calculate delay based on current speed (1-100 -> 200ms-10ms)
+      const currentDelay = Math.max(10, 210 - (speedRef.current * 2));
+      const timeout = setTimeout(animateNextNode, currentDelay);
+      animationTimeouts.current.push(timeout);
+    };
+    
+    animateNextNode();
+  }, [clearAnimationTimeouts]);
 
   const animatePath = useCallback((shortestPath: GridNode[], pathFound: boolean) => {
     console.log('Animating path. Path found:', pathFound, 'Path length:', shortestPath.length);
-    
-    const pathDelay = 50; // Fixed fast delay for path animation
     
     if (shortestPath.length === 0 || !pathFound) {
       console.log('No path to animate or path not found');
@@ -234,29 +261,38 @@ const App: React.FC = () => {
       return;
     }
     
-    for (let i = 0; i < shortestPath.length; i++) {
-      setTimeout(() => {
-        const node = shortestPath[i];
-        console.log('Animating path node:', node.row, node.col);
-        
-        if (!node.isStart && !node.isEnd) {
-          setGrid(prev => {
-            const newGrid = [...prev];
-            newGrid[node.row][node.col] = { ...newGrid[node.row][node.col], isPath: true };
-            return newGrid;
-          });
-        }
-        
-        // If this is the last path node, finish the algorithm
-        if (i === shortestPath.length - 1) {
-          setTimeout(() => {
-            console.log('Algorithm animation completed');
-            setIsRunning(false);
-            setIsFinished(true);
-          }, pathDelay);
-        }
-      }, pathDelay * i);
-    }
+    // Animate path with dynamic speed
+    let currentIndex = 0;
+    
+    const animateNextPathNode = () => {
+      if (currentIndex >= shortestPath.length) {
+        // Finish the algorithm
+        console.log('Algorithm animation completed');
+        setIsRunning(false);
+        setIsFinished(true);
+        return;
+      }
+      
+      const node = shortestPath[currentIndex];
+      console.log('Animating path node:', node.row, node.col);
+      
+      if (!node.isStart && !node.isEnd) {
+        setGrid(prev => {
+          const newGrid = [...prev];
+          newGrid[node.row][node.col] = { ...newGrid[node.row][node.col], isPath: true };
+          return newGrid;
+        });
+      }
+      
+      currentIndex++;
+      
+      // Use a faster delay for path animation, but still responsive to speed
+      const pathDelay = Math.max(20, 100 - (speedRef.current * 0.8));
+      const timeout = setTimeout(animateNextPathNode, pathDelay);
+      animationTimeouts.current.push(timeout);
+    };
+    
+    animateNextPathNode();
   }, []);
 
   const getSpeedLabel = (speed: number) => {
@@ -300,7 +336,6 @@ const App: React.FC = () => {
               value={speed}
               onChange={(e) => setSpeed(Number(e.target.value))}
               className={styles.speedSlider}
-              disabled={isRunning}
             />
             <span className={styles.speedValue}>{getSpeedLabel(speed)}</span>
           </div>
@@ -330,11 +365,22 @@ const App: React.FC = () => {
             onClick={handleRunAlgorithm}
             disabled={isRunning || !startNode || !endNode}
           >
-            {isRunning ? 'Running...' : 'Run Algorithm'}
+            Run Algorithm
           </button>
+          {isRunning && (
+            <button
+              onClick={() => {
+                clearAnimationTimeouts();
+                setIsRunning(false);
+              }}
+              className="secondary"
+            >
+              Stop
+            </button>
+          )}
           <button
             onClick={handleClearPath}
-            disabled={isRunning}
+            disabled={!isRunning && !isFinished}
             className="secondary"
           >
             Clear Path
