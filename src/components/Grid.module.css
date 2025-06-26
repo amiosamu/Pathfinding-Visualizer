@@ -1,0 +1,108 @@
+.grid {
+  display: inline-block;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+}
+
+.node {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  position: relative;
+  will-change: transform;
+}
+
+.node:hover {
+  transform: scale(1.05);
+}
+
+.node.empty {
+  background: var(--surface);
+}
+
+.node.start {
+  background: var(--start-color);
+}
+
+.node.start::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+}
+
+.node.end {
+  background: var(--end-color);
+}
+
+.node.end::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+}
+
+.node.wall {
+  background: var(--wall-color);
+  animation: wallDrop 0.2s ease-out;
+  will-change: transform;
+}
+
+.node.visited {
+  background: var(--visited-color);
+  animation: visitedAnimation 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+.node.path {
+  background: var(--path-color);
+  animation: pathAnimation 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+@keyframes wallDrop {
+  0% {
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes visitedAnimation {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pathAnimation {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+} 
