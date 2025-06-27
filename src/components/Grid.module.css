@@ -30,29 +30,43 @@
 }
 
 .node.start {
-  background: var(--start-color);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #4CAF50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+  animation: startPulse 2s ease-in-out infinite;
 }
 
 .node.start::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  content: '▶';
+  color: #4CAF50;
   font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes startPulse {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(76, 175, 80, 0.8);
+  }
 }
 
 .node.end {
-  background: var(--end-color);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .node.end::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  content: '🎯';
   font-size: 12px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 .node.wall {
@@ -62,9 +76,9 @@
 }
 
 .node.visited {
-  background: var(--visited-color);
-  animation: visitedAnimation 0.3s ease-out;
-  will-change: transform, opacity;
+  background: #64B5F6;
+  animation: visitedAnimation 0.3s ease-out, explorationGradient 8s ease-out forwards;
+  will-change: transform, opacity, background-color;
 }
 
 .node.path {
@@ -104,5 +118,23 @@
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes explorationGradient {
+  0% {
+    background-color: #E3F2FD;
+  }
+  25% {
+    background-color: #90CAF9;
+  }
+  50% {
+    background-color: #42A5F5;
+  }
+  75% {
+    background-color: #1976D2;
+  }
+  100% {
+    background-color: #0D47A1;
   }
 } 

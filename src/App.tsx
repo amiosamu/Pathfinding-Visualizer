@@ -306,7 +306,7 @@ const App: React.FC = () => {
       <header className={styles.header}>
         <h1 className={styles.title}>Pathfinding Visualizer</h1>
         <p className={styles.subtitle}>
-          Visualize popular pathfinding algorithms like Dijkstra, A*, BFS, and DFS in action
+          Visualize popular pathfinding algorithms like Dijkstra, A*, BFS, and DFS in action.
         </p>
       </header>
 

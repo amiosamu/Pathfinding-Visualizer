@@ -22,37 +22,95 @@ import {
  * toward the goal, but it still guarantees the shortest path.
  */
 
+// Extended node interface for A* specific properties
+interface AStarNode extends GridNode {
+  fScore: number;
+  hScore: number;
+}
+
 export const aStar = (
   grid: GridNode[][],
   startNode: GridNode,
   finishNode: GridNode
 ): AlgorithmResult => {
-  // TODO: Your implementation here!
-  // 
-  // Hints:
-  // 1. You'll need to track f, g, and h values for each node
-  // 2. Use a priority queue (or array sorted by f value) for open set
-  // 3. Keep a closed set of already evaluated nodes
-  // 4. Initialize start node with g=0, h=heuristic to goal, f=g+h
-  // 5. While open set is not empty:
-  //    - Get node with lowest f value
-  //    - If it's the goal, reconstruct path
-  //    - Move current from open to closed set
-  //    - For each neighbor:
-  //      - Skip if in closed set or is a wall
-  //      - Calculate tentative g score
-  //      - If neighbor not in open set or new g score is better:
-  //        - Update neighbor's g, h, f values and previous node
-  //        - Add to open set if not already there
-  // 6. Use manhattanDistance as your heuristic function
-  
   const visitedNodesInOrder: GridNode[] = [];
-  const nodesInShortestPathOrder: GridNode[] = [];
-  const isPathFound = false;
-
+  
+  // Initialize all nodes with A* specific properties
+  for (let row = 0; row < grid.length; row++) {
+    for (let col = 0; col < grid[row].length; col++) {
+      const node = grid[row][col] as AStarNode;
+      node.distance = Infinity; // g(n) - actual distance from start
+      node.hScore = manhattanDistance(node, finishNode); // h(n) - heuristic to goal
+      node.fScore = Infinity; // f(n) = g(n) + h(n)
+      node.isVisited = false;
+      node.previousNode = null;
+    }
+  }
+  
+  // Initialize start node
+  const startNodeAStar = startNode as AStarNode;
+  startNodeAStar.distance = 0; // g(start) = 0
+  startNodeAStar.fScore = startNodeAStar.hScore; // f(start) = g(start) + h(start)
+  
+  // Open set: nodes to be evaluated (priority queue ordered by f score)
+  const openSet: AStarNode[] = [startNodeAStar];
+  
+  while (openSet.length > 0) {
+    // Sort by f score and get the node with lowest f value
+    openSet.sort((a, b) => a.fScore - b.fScore);
+    const currentNode = openSet.shift()!;
+    
+    // If we encounter a wall, skip it
+    if (currentNode.isWall) {
+      continue;
+    }
+    
+    // Move current node from open set to closed set (mark as visited)
+    currentNode.isVisited = true;
+    visitedNodesInOrder.push(currentNode);
+    
+    // If we reached the finish node, we're done!
+    if (currentNode === finishNode) {
+      const nodesInShortestPathOrder = getNodesInShortestPathOrder(finishNode);
+      return {
+        visitedNodesInOrder,
+        nodesInShortestPathOrder,
+        isPathFound: true
+      };
+    }
+    
+    // Examine all neighbors
+    const neighbors = getUnvisitedNeighbors(currentNode, grid);
+    for (const neighbor of neighbors) {
+      const neighborAStar = neighbor as AStarNode;
+      
+      // Skip if already visited (in closed set)
+      if (neighborAStar.isVisited) {
+        continue;
+      }
+      
+      // Calculate tentative g score (distance from start through current node)
+      const tentativeGScore = currentNode.distance + 1; // Cost of 1 for each move
+      
+      // Check if this path to neighbor is better than any previous one
+      if (tentativeGScore < neighborAStar.distance) {
+        // This path is the best until now, record it
+        neighborAStar.previousNode = currentNode;
+        neighborAStar.distance = tentativeGScore; // g(neighbor)
+        neighborAStar.fScore = neighborAStar.distance + neighborAStar.hScore; // f(neighbor) = g(neighbor) + h(neighbor)
+        
+        // Add neighbor to open set if not already there
+        if (!openSet.includes(neighborAStar)) {
+          openSet.push(neighborAStar);
+        }
+      }
+    }
+  }
+  
+  // If we get here, no path was found
   return {
     visitedNodesInOrder,
-    nodesInShortestPathOrder,
-    isPathFound
+    nodesInShortestPathOrder: [],
+    isPathFound: false
   };
 }; 
