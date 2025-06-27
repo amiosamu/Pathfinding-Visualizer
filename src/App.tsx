@@ -9,7 +9,6 @@ import {
   getNewGridWithWallToggled,
   updateNodeInGrid,
   createGridCopy,
-  GRID_DIMENSIONS 
 } from './utils/gridUtils';
 import { getAlgorithm } from './algorithms';
 import styles from './App.module.css';
@@ -22,7 +21,6 @@ const App: React.FC = () => {
   const [endNode, setEndNode] = useState<{ row: number; col: number } | null>(null);
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<Algorithm>(Algorithm.BFS);
   const [speed, setSpeed] = useState(50);
-  const [isMousePressed, setIsMousePressed] = useState(false);
   const [placingMode, setPlacingMode] = useState<'start' | 'end' | 'wall'>('wall');
   const [isDrawingWalls, setIsDrawingWalls] = useState(false);
   
@@ -45,7 +43,6 @@ const App: React.FC = () => {
     if (isRunning) return;
     
     mouseIsPressed.current = true;
-    setIsMousePressed(true);
     
     const node = grid[row][col];
     
@@ -87,7 +84,6 @@ const App: React.FC = () => {
 
   const handleMouseUp = useCallback(() => {
     mouseIsPressed.current = false;
-    setIsMousePressed(false);
     setIsDrawingWalls(false);
   }, []);
 
