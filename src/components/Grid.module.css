@@ -16,13 +16,14 @@
   height: 20px;
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: transform 0.1s ease;
   position: relative;
-  will-change: transform;
+  contain: layout style paint;
+  transform: translateZ(0);
 }
 
 .node:hover {
-  transform: scale(1.05);
+  border-color: var(--primary-color);
+  transition: border-color 0.1s ease;
 }
 
 .node.empty {
@@ -49,10 +50,10 @@
 
 @keyframes startPulse {
   0%, 100% {
-    box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+    opacity: 1;
   }
   50% {
-    box-shadow: 0 0 16px rgba(76, 175, 80, 0.8);
+    opacity: 0.7;
   }
 }
 
@@ -71,20 +72,18 @@
 
 .node.wall {
   background: var(--wall-color);
-  animation: wallDrop 0.2s ease-out;
-  will-change: transform;
+  animation: wallDrop 0.15s ease-out;
 }
 
 .node.visited {
   background: #64B5F6;
-  animation: visitedAnimation 0.3s ease-out, explorationGradient 8s ease-out forwards;
-  will-change: transform, opacity, background-color;
+  animation: visitedAnimation 0.2s ease-out, explorationGradient 6s ease-out forwards;
+  will-change: background-color;
 }
 
 .node.path {
   background: var(--path-color);
-  animation: pathAnimation 0.3s ease-out;
-  will-change: transform, opacity;
+  animation: pathAnimation 0.2s ease-out;
 }
 
 @keyframes wallDrop {
@@ -137,4 +136,31 @@
   100% {
     background-color: #0D47A1;
   }
+}
+
+/* Performance optimizations for reduced motion and smooth interactions */
+@media (prefers-reduced-motion: reduce) {
+  .node.start {
+    animation: none;
+  }
+  
+  .node.visited {
+    animation: none;
+    background: #42A5F5;
+  }
+  
+  .node.wall {
+    animation: none;
+  }
+  
+  .node.path {
+    animation: none;
+  }
+}
+
+/* Optimize for better zoom performance */
+.grid {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 } 
